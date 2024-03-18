@@ -1,3 +1,26 @@
+## sophus (iron) - 1.3.2-1
+
+The packages in the `sophus` repository were released into the `iron` distro by running `/usr/bin/bloom-release --track iron --rosdistro iron sophus` on `Mon, 18 Mar 2024 13:09:30 -0000`
+
+The `sophus` package was released.
+
+Version of package(s) in repository `sophus`:
+
+- upstream repository: https://github.com/clalancette/sophus.git
+- release repository: https://github.com/ros2-gbp/sophus-release.git
+- rosdistro version: `1.3.1-3`
+- old version: `1.3.1-3`
+- new version: `1.3.2-1`
+
+Versions of tools used:
+
+- bloom version: `0.11.2`
+- catkin_pkg version: `1.0.0`
+- rosdep version: `0.22.2`
+- rosdistro version: `0.9.0`
+- vcstools version: `0.1.42`
+
+
 ## sophus (humble) - 1.3.2-1
 
 The packages in the `sophus` repository were released into the `humble` distro by running `/usr/bin/bloom-release --track humble --rosdistro humble sophus` on `Mon, 18 Mar 2024 13:08:15 -0000`
