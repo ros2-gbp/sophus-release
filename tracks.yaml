@@ -169,7 +169,7 @@ tracks:
     release_tag: :{version}
     ros_distro: humble
     vcs_type: git
-    vcs_uri: https://github.com/stonier/sophus.git
+    vcs_uri: https://github.com/clalancette/sophus.git
     version: :{auto}
   indigo:
     actions:
@@ -219,7 +219,7 @@ tracks:
     release_tag: :{version}
     ros_distro: iron
     vcs_type: git
-    vcs_uri: https://github.com/stonier/sophus.git
+    vcs_uri: https://github.com/clalancette/sophus.git
     version: :{auto}
   jade:
     actions:
@@ -339,5 +339,5 @@ tracks:
     release_tag: :{version}
     ros_distro: rolling
     vcs_type: git
-    vcs_uri: https://github.com/stonier/sophus.git
+    vcs_uri: https://github.com/clalancette/sophus.git
     version: :{auto}
