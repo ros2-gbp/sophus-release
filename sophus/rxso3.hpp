@@ -82,6 +82,8 @@ class RxSO3Base {
   static int constexpr num_parameters = 4;
   /// Group transformations are 3x3 matrices.
   static int constexpr N = 3;
+  /// Points are 3-dimensional
+  static int constexpr Dim = 3;
   using Transformation = Matrix<Scalar, N, N>;
   using Point = Vector3<Scalar>;
   using HomogeneousPoint = Vector4<Scalar>;
@@ -296,7 +298,7 @@ class RxSO3Base {
   /// Group action on lines.
   ///
   /// This function rotates a parametrized line ``l(t) = o + t * d`` by the SO3
-  /// element ans scales it by the scale factor:
+  /// element and scales it by the scale factor:
   ///
   /// Origin ``o`` is rotated and scaled
   /// Direction ``d`` is rotated (preserving it's norm)
@@ -459,6 +461,22 @@ class RxSO3Base {
     return J;
   }
 
+  /// Returns derivative of log(this^{-1} * x) by x at x=this.
+  ///
+  SOPHUS_FUNC Matrix<Scalar, DoF, num_parameters> Dx_log_this_inv_by_x_at_this()
+      const {
+    auto& q = quaternion();
+    Matrix<Scalar, DoF, num_parameters> J;
+    // clang-format off
+    J << q.w(),  q.z(), -q.y(), -q.x(),
+        -q.z(),  q.w(),  q.x(), -q.y(),
+         q.y(), -q.x(),  q.w(), -q.z(),
+         q.x(),  q.y(),  q.z(),  q.w();
+    // clang-format on
+    const Scalar scaler = Scalar(2.) / q.squaredNorm();
+    return J * scaler;
+  }
+
  private:
   /// Mutator of quaternion is private to ensure class invariant.
   ///
@@ -566,6 +584,15 @@ class RxSO3 : public RxSO3Base<RxSO3<Scalar_, Options>> {
         "Inverse scale factor must be greater-equal epsilon.");
   }
 
+  /// Constructor from scale factor and unit quaternion
+  ///
+  /// Precondition: quaternion must not be close to zero.
+  ///
+  template <class D>
+  SOPHUS_FUNC explicit RxSO3(Scalar const& scale,
+                             Eigen::QuaternionBase<D> const& unit_quat)
+      : RxSO3(scale, SO3<Scalar>(unit_quat)) {}
+
   /// Accessor of quaternion.
   ///
   SOPHUS_FUNC QuaternionMember const& quaternion() const { return quaternion_; }
@@ -596,6 +623,15 @@ class RxSO3 : public RxSO3Base<RxSO3<Scalar_, Options>> {
     return J;
   }
 
+  /// Returns derivative of exp(x) * p wrt. x_i at x=0.
+  ///
+  SOPHUS_FUNC static Sophus::Matrix<Scalar, 3, DoF> Dx_exp_x_times_point_at_0(
+      Point const& point) {
+    Sophus::Matrix<Scalar, 3, DoF> j;
+    j << Sophus::SO3<Scalar>::hat(-point), point;
+    return j;
+  }
+
   /// Returns derivative of exp(x).matrix() wrt. ``x_i at x=0``.
   ///
   SOPHUS_FUNC static Transformation Dxi_exp_x_matrix_at_0(int i) {
@@ -607,7 +643,7 @@ class RxSO3 : public RxSO3Base<RxSO3<Scalar_, Options>> {
   /// plus logarithm of scale) and returns the corresponding element of the
   /// group RxSO3.
   ///
-  /// To be more specific, thixs function computes ``expmat(hat(omega))``
+  /// To be more specific, this function computes ``expmat(hat(omega))``
   /// with ``expmat(.)`` being the matrix exponential and ``hat(.)`` being the
   /// hat()-operator of RSO3.
   ///
@@ -631,7 +667,7 @@ class RxSO3 : public RxSO3Base<RxSO3<Scalar_, Options>> {
     Vector3<Scalar> const omega = a.template head<3>();
     Scalar sigma = a[3];
     Scalar scale = exp(sigma);
-    // Ensure that scale-factor contraint is always valid
+    // Ensure that scale-factor constraint is always valid
     scale = max(scale, Constants<Scalar>::epsilonPlus());
     scale = min(scale, Scalar(1.) / Constants<Scalar>::epsilonPlus());
     Scalar sqrt_scale = sqrt(scale);
