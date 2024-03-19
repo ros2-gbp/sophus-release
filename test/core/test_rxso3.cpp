@@ -247,7 +247,12 @@ class Tests {
                        Constants<Scalar>::epsilon(), "RxSO3(scale, SO3)");
     SOPHUS_TEST_APPROX(passed, RxSO3Type(scale, so3.matrix()).matrix(),
                        rxso3.matrix(), Constants<Scalar>::epsilon(),
-                       "RxSO3(scale, SO3)");
+                       "RxSO3(scale, matrix3x3)");
+    const Eigen::Quaternion<Scalar> q = rxso3.quaternion();
+    SOPHUS_TEST_APPROX(passed, RxSO3Type(scale, q).matrix(),
+                       RxSO3Type(scale, SO3<Scalar>(q)).matrix(),
+                       Constants<Scalar>::epsilon(),
+                       "RxSO3(scale, unit_quaternion)");
     Matrix3<Scalar> R =
         SO3<Scalar>::exp(Point(Scalar(0.2), Scalar(0.5), Scalar(-1.0)))
             .matrix();
@@ -276,11 +281,13 @@ class Tests {
         Matrix3<Scalar> R = makeRotationMatrix(M);
         Matrix3<Scalar> sR = scale * R;
         SOPHUS_TEST(passed, isScaledOrthogonalAndPositive(sR),
-                    "isScaledOrthogonalAndPositive(sR): {} *\n{}", scale, R);
+                    "isScaledOrthogonalAndPositive(sR): {} *\n{}",
+                    SOPHUS_FMT_ARG(scale), SOPHUS_FMT_ARG(R));
         Matrix3<Scalar> sR_cols_swapped;
         sR_cols_swapped << sR.col(1), sR.col(0), sR.col(2);
         SOPHUS_TEST(passed, !isScaledOrthogonalAndPositive(sR_cols_swapped),
-                    "isScaledOrthogonalAndPositive(-sR): {} *\n{}", scale, R);
+                    "isScaledOrthogonalAndPositive(-sR): {} *\n{}",
+                    SOPHUS_FMT_ARG(scale), SOPHUS_FMT_ARG(R));
       }
     }
     return passed;
