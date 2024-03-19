@@ -87,6 +87,9 @@ class SO3Base {
   static int constexpr num_parameters = 4;
   /// Group transformations are 3x3 matrices.
   static int constexpr N = 3;
+  /// Points are 3-dimensional
+  static int constexpr Dim = 3;
+
   using Transformation = Matrix<Scalar, N, N>;
   using Point = Vector3<Scalar>;
   using HomogeneousPoint = Vector4<Scalar>;
@@ -215,6 +218,20 @@ class SO3Base {
     return J;
   }
 
+  /// Returns derivative of log(this^{-1} * x) by x at x=this.
+  ///
+  SOPHUS_FUNC Matrix<Scalar, DoF, num_parameters> Dx_log_this_inv_by_x_at_this()
+      const {
+    auto& q = unit_quaternion();
+    Matrix<Scalar, DoF, num_parameters> J;
+    // clang-format off
+    J << q.w(),  q.z(), -q.y(), -q.x(),
+        -q.z(),  q.w(),  q.x(), -q.y(),
+         q.y(), -q.x(),  q.w(), -q.z();
+    // clang-format on
+    return J * Scalar(2.);
+  }
+
   /// Returns internal parameters of SO(3).
   ///
   /// It returns (q.imag[0], q.imag[1], q.imag[2], q.real), with q being the
@@ -267,7 +284,7 @@ class SO3Base {
       // w=0 should never happen here!
       SOPHUS_ENSURE(abs(w) >= Constants<Scalar>::epsilon(),
                     "Quaternion ({}) should be normalized!",
-                    unit_quaternion().coeffs().transpose());
+                    SOPHUS_FMT_ARG(unit_quaternion().coeffs().transpose()));
       Scalar squared_w = w * w;
       two_atan_nbyw_by_n =
           Scalar(2) / w - Scalar(2.0 / 3.0) * (squared_n) / (w * squared_w);
@@ -300,9 +317,10 @@ class SO3Base {
   ///
   SOPHUS_FUNC void normalize() {
     Scalar length = unit_quaternion_nonconst().norm();
-    SOPHUS_ENSURE(length >= Constants<Scalar>::epsilon(),
-                  "Quaternion ({}) should not be close to zero!",
-                  unit_quaternion_nonconst().coeffs().transpose());
+    SOPHUS_ENSURE(
+        length >= Constants<Scalar>::epsilon(),
+        "Quaternion ({}) should not be close to zero!",
+        SOPHUS_FMT_ARG(unit_quaternion_nonconst().coeffs().transpose()));
     unit_quaternion_nonconst().coeffs() /= length;
   }
 
@@ -325,8 +343,8 @@ class SO3Base {
 
   template <typename QuaternionProductType, typename QuaternionTypeA,
             typename QuaternionTypeB>
-  static QuaternionProductType QuaternionProduct(const QuaternionTypeA& a,
-                                                 const QuaternionTypeB& b) {
+  SOPHUS_FUNC static QuaternionProductType QuaternionProduct(
+      const QuaternionTypeA& a, const QuaternionTypeB& b) {
     return QuaternionProductType(
         a.w() * b.w() - a.x() * b.x() - a.y() * b.y() - a.z() * b.z(),
         a.w() * b.x() + a.x() * b.w() + a.y() * b.z() - a.z() * b.y(),
@@ -497,9 +515,9 @@ class SO3 : public SO3Base<SO3<Scalar_, Options>> {
   ///
   SOPHUS_FUNC SO3(Transformation const& R) : unit_quaternion_(R) {
     SOPHUS_ENSURE(isOrthogonal(R), "R is not orthogonal:\n {}",
-                  R * R.transpose());
+                  SOPHUS_FMT_ARG(R * R.transpose()));
     SOPHUS_ENSURE(R.determinant() > Scalar(0), "det(R) is not positive: {}",
-                  R.determinant());
+                  SOPHUS_FMT_ARG(R.determinant()));
   }
 
   /// Constructor from quaternion
@@ -642,6 +660,13 @@ class SO3 : public SO3Base<SO3<Scalar_, Options>> {
     return J;
   }
 
+  /// Returns derivative of exp(x) * p wrt. x_i at x=0.
+  ///
+  SOPHUS_FUNC static Sophus::Matrix<Scalar, 3, DoF> Dx_exp_x_times_point_at_0(
+      Point const& point) {
+    return hat(-point);
+  }
+
   /// Returns derivative of exp(x).matrix() wrt. ``x_i at x=0``.
   ///
   SOPHUS_FUNC static Transformation Dxi_exp_x_matrix_at_0(int i) {
@@ -700,7 +725,8 @@ class SO3 : public SO3Base<SO3<Scalar_, Options>> {
     SOPHUS_ENSURE(abs(q.unit_quaternion().squaredNorm() - Scalar(1)) <
                       Sophus::Constants<Scalar>::epsilon(),
                   "SO3::exp failed! omega: {}, real: {}, img: {}",
-                  omega.transpose(), real_factor, imag_factor);
+                  SOPHUS_FMT_ARG(omega.transpose()),
+                  SOPHUS_FMT_ARG(real_factor), SOPHUS_FMT_ARG(imag_factor));
     return q;
   }
 
