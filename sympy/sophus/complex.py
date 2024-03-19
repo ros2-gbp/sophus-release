@@ -1,7 +1,6 @@
-import sophus
-import sympy
-import sys
 import unittest
+
+import sympy
 
 
 class Complex:
@@ -17,7 +16,7 @@ class Complex:
                        self.imag * right.real + self.real * right.imag)
 
     def __add__(self, right):
-        return Complex(elf.real + right.real, self.imag + right.imag)
+        return Complex(self.real + right.real, self.imag + right.imag)
 
     def __neg__(self):
         return Complex(-self.real, -self.image)
@@ -88,7 +87,7 @@ class TestComplex(unittest.TestCase):
         self.a = Complex(x, y)
         self.b = Complex(u, v)
 
-    def test_muliplications(self):
+    def test_multiplications(self):
         product = self.a * self.a.inv()
         self.assertEqual(product.simplify(),
                          Complex.identity())

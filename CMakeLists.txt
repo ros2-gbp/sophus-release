@@ -1,5 +1,5 @@
-cmake_minimum_required(VERSION 3.4)
-project(Sophus VERSION 22.04.1)
+cmake_minimum_required(VERSION 3.5)
+project(Sophus VERSION 1.22.10)
 
 include(CMakePackageConfigHelpers)
 include(GNUInstallDirs)
@@ -30,11 +30,11 @@ if(SOPHUS_MASTER_PROJECT)
   IF("${CMAKE_CXX_COMPILER_ID}" STREQUAL "Clang")
     SET(CMAKE_CXX_FLAGS_DEBUG  "-O0 -g")
     SET(CMAKE_CXX_FLAGS_RELEASE "-O3")
-    SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -Werror -Wextra  -Wno-deprecated-register -Qunused-arguments -fcolor-diagnostics")
+    SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -Wextra  -Wno-deprecated-register -Qunused-arguments -fcolor-diagnostics")
   ELSEIF("${CMAKE_CXX_COMPILER_ID}" STREQUAL "GNU")
     SET(CMAKE_CXX_FLAGS_DEBUG  "-O0 -g")
     SET(CMAKE_CXX_FLAGS_RELEASE "-O3")
-    SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -Werror -Wextra -std=c++14 -Wno-deprecated-declarations -ftemplate-backtrace-limit=0")
+    SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -Wextra -std=c++14 -Wno-deprecated-declarations -ftemplate-backtrace-limit=0")
     SET(CMAKE_CXX_FLAGS_COVERAGE "${CMAKE_CXX_FLAGS_DEBUG} --coverage -fno-inline -fno-inline-small-functions -fno-default-inline")
     SET(CMAKE_EXE_LINKER_FLAGS_COVERAGE "${CMAKE_EXE_LINKER_FLAGS_DEBUG} --coverage")
     SET(CMAKE_SHARED_LINKER_FLAGS_COVERAGE "${CMAKE_SHARED_LINKER_FLAGS_DEBUG} --coverage")
@@ -70,6 +70,8 @@ set(SOPHUS_HEADER_FILES
   sophus/average.hpp
   sophus/cartesian.hpp
   sophus/ceres_local_parameterization.hpp
+  sophus/ceres_manifold.hpp
+  sophus/ceres_typetraits.hpp
   sophus/common.hpp
   sophus/geometry.hpp
   sophus/interpolate.hpp
@@ -150,6 +152,22 @@ option(BUILD_SOPHUS_EXAMPLES "Build examples." ON)
 if(BUILD_SOPHUS_EXAMPLES)
     add_subdirectory(examples)
 endif()
+
+# Build python sophus bindings
+option(BUILD_PYTHON_BINDINGS "Build python sophus bindings." OFF)
+if(BUILD_PYTHON_BINDINGS)
+  include(FetchContent)
+  FetchContent_Declare(
+      pybind11
+      GIT_REPOSITORY https://github.com/pybind/pybind11.git
+      GIT_TAG master
+  )
+  FetchContent_MakeAvailable(pybind11)
+
+  add_subdirectory(${pybind11_SOURCE_DIR} ${CMAKE_CURRENT_BINARY_DIR}/pybind)
+  pybind11_add_module(sophus_pybind ${CMAKE_CURRENT_SOURCE_DIR}/sophus_pybind/bindings.cpp)
+  target_link_libraries(sophus_pybind PUBLIC sophus)
+endif(BUILD_PYTHON_BINDINGS)
 
 if(SOPHUS_INSTALL)
   # Export package for use from the build tree
