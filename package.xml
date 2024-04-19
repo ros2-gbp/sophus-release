@@ -1,0 +1,43 @@
+<?xml version="1.0"?>
+<package format="2">
+  <name>sophus</name>
+  <!--
+  We add 900 to the patch part of the version and then multiply it by 10,
+  i.e. our version = `(upstream_patch_version + 900) * 10`,
+  so we can have intermediate releases as well as release any future official 1.22.x versions.
+
+  This is basically packing the patch part of the version and a fourth version part together
+  into the third part of the version.
+
+  The use of `900` instead of something else like `100` is arbitrary, but it might
+  help people recognize that this is a "special" version number.
+  It is needed however, because we cannot have a leading `0` in our patch version.
+
+  Consider these possible future versions as an example:
+
+  1.22.9100 -> current state of this repository, 1.22.10 + some commits from us
+  1.22.9110 -> upstream 1.22.11
+  1.22.9111 -> upstream 1.22.11 + additional commits from upstream or us
+  1.22.9112 -> upstream 1.22.11 + additional commits from upstream or us
+  1.23.9000 -> upstream 1.23.0
+  and so on...
+  -->
+  <version>1.22.9100</version>
+  <description>
+   C++ implementation of Lie Groups using Eigen.
+  </description>
+  <url type="repository">https://github.com/strasdat/sophus</url>
+  <url type="bugtracker">https://github.com/strasdat/sophus/issues</url>
+  <maintainer email="d.stonier@gmail.com">Daniel Stonier</maintainer>
+  <author>Hauke Strasdat</author>
+  <license>MIT</license>
+
+  <buildtool_depend>cmake</buildtool_depend>
+
+  <build_depend>eigen</build_depend>
+  <build_export_depend>eigen</build_export_depend>
+
+  <export>
+    <build_type>cmake</build_type>
+  </export>
+</package>
