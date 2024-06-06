@@ -37,6 +37,8 @@ override_dh_auto_configure:
 	dh_auto_configure -- \
 		-DCMAKE_INSTALL_PREFIX="@(InstallationPrefix)" \
 		-DCMAKE_PREFIX_PATH="@(InstallationPrefix)" \
+		-DBUILD_SOPHUS_TESTS=OFF \
+		-DBUILD_SOPHUS_EXAMPLES=OFF \
 		$(BUILD_TESTING_ARG)
 
 override_dh_auto_build:
