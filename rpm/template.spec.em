@@ -53,6 +53,8 @@ mkdir -p .obj-%{_target_platform} && cd .obj-%{_target_platform}
 %if !0%{?with_tests}
     -DBUILD_TESTING=OFF \
 %endif
+    -DBUILD_SOPHUS_TESTS=OFF \
+    -DBUILD_SOPHUS_EXAMPLES=OFF \
     ..
 
 %make_build
