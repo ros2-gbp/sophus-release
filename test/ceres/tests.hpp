@@ -243,9 +243,9 @@ struct LieGroupCeresTests {
     for (size_t i = 0; i < num_vertices; ++i)
       for (size_t j = i + 1; j < num_vertices; ++j) {
         LieGroupd diff = V[i].inverse() * V[j];
-        const auto delta_log =
-            Random<typename LieGroupd::Tangent>::sample(rng) *
-            sigma_observation_elementwise;
+        typename LieGroupd::Tangent sample =
+            Random<typename LieGroupd::Tangent>::sample(rng);
+        const auto delta_log = sample * sigma_observation_elementwise;
         const auto delta = LieGroupd::exp(delta_log);
         ceres::CostFunction* cost =
             new ceres::AutoDiffCostFunction<TestGraphFunctor, LieGroupd::DoF,
