@@ -1,0 +1,29 @@
+From 209ab3ba7101dd15938bb23b25e6c34780e712a7 Mon Sep 17 00:00:00 2001
+From: Chris Lalancette <clalancette@gmail.com>
+Date: Thu, 6 Jun 2024 13:54:12 -0400
+Subject: [PATCH] Don't build testing or examples on the buildfarm.
+
+This avoids the buildfarm running out of memory when
+compiling.
+
+Signed-off-by: Chris Lalancette <clalancette@gmail.com>
+---
+ rpm/template.spec.em | 2 ++
+ 1 file changed, 2 insertions(+)
+
+diff --git a/rpm/template.spec.em b/rpm/template.spec.em
+index b1217d0..3984d34 100644
+--- a/rpm/template.spec.em
++++ b/rpm/template.spec.em
+@@ -51,6 +51,8 @@ mkdir -p .obj-%{_target_platform} && cd .obj-%{_target_platform}
+ %if !0%{?with_tests}
+     -DBUILD_TESTING=OFF \
+ %endif
++    -DBUILD_SOPHUS_TESTS=OFF \
++    -DBUILD_SOPHUS_EXAMPLES=OFF \
+     ..
+ 
+ %make_build
+-- 
+2.43.0
+
