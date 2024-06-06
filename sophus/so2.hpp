@@ -89,6 +89,8 @@ class SO2Base {
   static int constexpr num_parameters = 2;
   /// Group transformations are 2x2 matrices.
   static int constexpr N = 2;
+  /// Points are 3-dimensional
+  static int constexpr Dim = 2;
   using Transformation = Matrix<Scalar, N, N>;
   using Point = Vector2<Scalar>;
   using HomogeneousPoint = Vector3<Scalar>;
@@ -317,6 +319,14 @@ class SO2Base {
     return unit_complex();
   }
 
+  /// Returns derivative of log(this^{-1} * x) by x at x=this.
+  ///
+  SOPHUS_FUNC Matrix<Scalar, DoF, num_parameters> Dx_log_this_inv_by_x_at_this()
+      const {
+    return Matrix<Scalar, DoF, num_parameters>(-unit_complex()[1],
+                                               unit_complex()[0]);
+  }
+
   /// Takes in complex number / tuple and normalizes it.
   ///
   /// Precondition: The complex number must not be close to zero.
@@ -392,9 +402,10 @@ class SO2 : public SO2Base<SO2<Scalar_, Options>> {
   SOPHUS_FUNC explicit SO2(Transformation const& R)
       : unit_complex_(Scalar(0.5) * (R(0, 0) + R(1, 1)),
                       Scalar(0.5) * (R(1, 0) - R(0, 1))) {
-    SOPHUS_ENSURE(isOrthogonal(R), "R is not orthogonal:\n {}", R);
+    SOPHUS_ENSURE(isOrthogonal(R), "R is not orthogonal:\n {}",
+                  SOPHUS_FMT_ARG(R));
     SOPHUS_ENSURE(R.determinant() > Scalar(0), "det(R) is not positive: {}",
-                  R.determinant());
+                  SOPHUS_FMT_ARG(R.determinant()));
   }
 
   /// Constructor from pair of real and imaginary number.
@@ -459,6 +470,13 @@ class SO2 : public SO2Base<SO2<Scalar_, Options>> {
   SOPHUS_FUNC static Sophus::Matrix<Scalar, num_parameters, DoF>
   Dx_exp_x_at_0() {
     return Sophus::Matrix<Scalar, num_parameters, DoF>(Scalar(0), Scalar(1));
+  }
+
+  /// Returns derivative of exp(x) * p wrt. x_i at x=0.
+  ///
+  SOPHUS_FUNC static Sophus::Matrix<Scalar, 2, DoF> Dx_exp_x_times_point_at_0(
+      Point const& point) {
+    return Point(-point.y(), point.x());
   }
 
   /// Returns derivative of exp(x).matrix() wrt. ``x_i at x=0``.
