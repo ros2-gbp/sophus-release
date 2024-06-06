@@ -69,6 +69,8 @@ class SE3Base {
   static int constexpr num_parameters = 7;
   /// Group transformations are 4x4 matrices.
   static int constexpr N = 4;
+  /// Points are 3-dimensional
+  static int constexpr Dim = 3;
   using Transformation = Matrix<Scalar, N, N>;
   using Point = Vector3<Scalar>;
   using HomogeneousPoint = Vector4<Scalar>;
@@ -203,6 +205,18 @@ class SE3Base {
     return J;
   }
 
+  /// Returns derivative of log(this^{-1} * x) by x at x=this.
+  ///
+  SOPHUS_FUNC Matrix<Scalar, DoF, num_parameters> Dx_log_this_inv_by_x_at_this()
+      const {
+    Matrix<Scalar, DoF, num_parameters> J;
+    J.template block<3, 4>(0, 0).setZero();
+    J.template block<3, 3>(0, 4) = so3().inverse().matrix();
+    J.template block<3, 4>(3, 0) = so3().Dx_log_this_inv_by_x_at_this();
+    J.template block<3, 3>(3, 4).setZero();
+    return J;
+  }
+
   /// Returns group inverse.
   ///
   SOPHUS_FUNC SE3<Scalar> inverse() const {
@@ -257,11 +271,11 @@ class SE3Base {
   /// ``o`` a 3-column vector of zeros.
   ///
   SOPHUS_FUNC Transformation matrix() const {
-    Transformation homogenious_matrix;
-    homogenious_matrix.template topLeftCorner<3, 4>() = matrix3x4();
-    homogenious_matrix.row(3) =
+    Transformation homogeneous_matrix;
+    homogeneous_matrix.template topLeftCorner<3, 4>() = matrix3x4();
+    homogeneous_matrix.row(3) =
         Matrix<Scalar, 1, 4>(Scalar(0), Scalar(0), Scalar(0), Scalar(1));
-    return homogenious_matrix;
+    return homogeneous_matrix;
   }
 
   /// Returns the significant first three rows of the matrix above.
@@ -383,9 +397,10 @@ class SE3Base {
   /// Precondition: ``R`` must be orthogonal and ``det(R)=1``.
   ///
   SOPHUS_FUNC void setRotationMatrix(Matrix3<Scalar> const& R) {
-    SOPHUS_ENSURE(isOrthogonal(R), "R is not orthogonal:\n {}", R);
+    SOPHUS_ENSURE(isOrthogonal(R), "R is not orthogonal:\n {}",
+                  SOPHUS_FMT_ARG(R));
     SOPHUS_ENSURE(R.determinant() > Scalar(0), "det(R) is not positive: {}",
-                  R.determinant());
+                  SOPHUS_FMT_ARG(R.determinant()));
     so3().setQuaternion(Eigen::Quaternion<Scalar>(R));
   }
 
@@ -503,7 +518,8 @@ class SE3 : public SE3Base<SE3<Scalar_, Options>> {
     SOPHUS_ENSURE((T.row(3) - Matrix<Scalar, 1, 4>(Scalar(0), Scalar(0),
                                                    Scalar(0), Scalar(1)))
                           .squaredNorm() < Constants<Scalar>::epsilon(),
-                  "Last row is not (0,0,0,1), but ({}).", T.row(3));
+                  "Last row is not (0,0,0,1), but ({}).",
+                  SOPHUS_FMT_ARG(T.row(3)));
   }
 
   /// This provides unsafe read/write access to internal data. SO(3) is
@@ -794,12 +810,13 @@ class SE3 : public SE3Base<SE3<Scalar_, Options>> {
     Scalar const i(1);
 
     // clang-format off
-    J << o, o, o, h, o, o, o,
-         o, o, o, h, o, o, o,
-         o, o, o, h, o, o, o,
-         o, o, o, i, o, o, o,
-         o, o, o, i, o, o, o,
-         o, o, o, i, o, o, o;
+    J << o, o, o, h, o, o,
+         o, o, o, o, h, o,
+	 o, o, o, o, o, h,
+	 o, o, o, o, o, o,
+	 i, o, o, o, o, o,
+	 o, i, o, o, o, o,
+	 o, o, i, o, o, o;
     // clang-format on
     return J;
   }
@@ -808,6 +825,16 @@ class SE3 : public SE3Base<SE3<Scalar_, Options>> {
   ///
   SOPHUS_FUNC static Transformation Dxi_exp_x_matrix_at_0(int i) {
     return generator(i);
+  }
+
+  /// Returns derivative of exp(x) * p wrt. x_i at x=0.
+  ///
+  SOPHUS_FUNC static Sophus::Matrix<Scalar, 3, DoF> Dx_exp_x_times_point_at_0(
+      Point const& point) {
+    Sophus::Matrix<Scalar, 3, DoF> J;
+    J << Sophus::Matrix3<Scalar>::Identity(),
+        Sophus::SO3<Scalar>::Dx_exp_x_times_point_at_0(point);
+    return J;
   }
 
   /// Group exponential
@@ -1019,7 +1046,8 @@ class SE3 : public SE3Base<SE3<Scalar_, Options>> {
 };
 
 template <class Scalar, int Options>
-SE3<Scalar, Options>::SE3() : translation_(TranslationMember::Zero()) {
+SOPHUS_FUNC SE3<Scalar, Options>::SE3()
+    : translation_(TranslationMember::Zero()) {
   static_assert(std::is_standard_layout<SE3>::value,
                 "Assume standard layout for the use of offsetof check below.");
   static_assert(
