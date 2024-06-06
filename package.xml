@@ -22,7 +22,7 @@
   1.23.9000 -> upstream 1.23.0
   and so on...
   -->
-  <version>1.22.9100</version>
+  <version>1.22.9101</version>
   <description>
    C++ implementation of Lie Groups using Eigen.
   </description>
@@ -36,6 +36,7 @@
 
   <build_depend>eigen</build_depend>
   <build_export_depend>eigen</build_export_depend>
+  <build_export_depend>libceres-dev</build_export_depend>
 
   <export>
     <build_type>cmake</build_type>

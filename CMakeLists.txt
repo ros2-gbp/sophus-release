@@ -34,7 +34,7 @@ if(SOPHUS_MASTER_PROJECT)
   ELSEIF("${CMAKE_CXX_COMPILER_ID}" STREQUAL "GNU")
     SET(CMAKE_CXX_FLAGS_DEBUG  "-O0 -g")
     SET(CMAKE_CXX_FLAGS_RELEASE "-O3")
-    SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -Wextra -std=c++14 -Wno-deprecated-declarations -ftemplate-backtrace-limit=0")
+    SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -Wextra -std=c++14 -Wno-deprecated-declarations -ftemplate-backtrace-limit=0 -Wno-array-bounds")
     SET(CMAKE_CXX_FLAGS_COVERAGE "${CMAKE_CXX_FLAGS_DEBUG} --coverage -fno-inline -fno-inline-small-functions -fno-default-inline")
     SET(CMAKE_EXE_LINKER_FLAGS_COVERAGE "${CMAKE_EXE_LINKER_FLAGS_DEBUG} --coverage")
     SET(CMAKE_SHARED_LINKER_FLAGS_COVERAGE "${CMAKE_SHARED_LINKER_FLAGS_DEBUG} --coverage")
@@ -61,6 +61,9 @@ if(NOT TARGET fmt::fmt)
   find_package(fmt)
 endif()
 
+if(NOT TARGET Ceres::ceres)
+  find_package(Ceres REQUIRED)
+endif()
 
 # Define interface library target
 add_library(sophus INTERFACE)
@@ -120,6 +123,9 @@ else()
   set(fmt_DEPENDENCY "find_dependency (fmt ${fmt_VERSION})")
   message(STATUS "Turning basic logging OFF")
 endif()
+
+target_link_libraries(sophus INTERFACE Ceres::ceres)
+set(Ceres_DEPENDENCY "find_dependency (Ceres ${Ceres_VERSION})")
 
 # Associate target with include directory
 target_include_directories(sophus INTERFACE
