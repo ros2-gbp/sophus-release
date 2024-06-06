@@ -71,6 +71,8 @@ class Sim3Base {
   static int constexpr num_parameters = 7;
   /// Group transformations are 4x4 matrices.
   static int constexpr N = 4;
+  /// Points are 3-dimensional
+  static int constexpr Dim = 3;
   using Transformation = Matrix<Scalar, N, N>;
   using Point = Vector3<Scalar>;
   using HomogeneousPoint = Vector4<Scalar>;
@@ -174,11 +176,11 @@ class Sim3Base {
   /// translation 3-vector and ``o`` a 3-column vector of zeros.
   ///
   SOPHUS_FUNC Transformation matrix() const {
-    Transformation homogenious_matrix;
-    homogenious_matrix.template topLeftCorner<3, 4>() = matrix3x4();
-    homogenious_matrix.row(3) =
+    Transformation homogeneous_matrix;
+    homogeneous_matrix.template topLeftCorner<3, 4>() = matrix3x4();
+    homogeneous_matrix.row(3) =
         Matrix<Scalar, 4, 1>(Scalar(0), Scalar(0), Scalar(0), Scalar(1));
-    return homogenious_matrix;
+    return homogeneous_matrix;
   }
 
   /// Returns the significant first three rows of the matrix above.
@@ -289,6 +291,18 @@ class Sim3Base {
     J.template block<3, 3>(4, 0) = rxso3().matrix();
     J.template block<3, 4>(4, 3).setZero();
 
+    return J;
+  }
+
+  /// Returns derivative of log(this^{-1} * x) by x at x=this.
+  ///
+  SOPHUS_FUNC Matrix<Scalar, DoF, num_parameters> Dx_log_this_inv_by_x_at_this()
+      const {
+    Matrix<Scalar, DoF, num_parameters> J;
+    J.template block<3, 4>(0, 0).setZero();
+    J.template block<3, 3>(0, 4) = rxso3().inverse().matrix();
+    J.template block<4, 4>(3, 0) = rxso3().Dx_log_this_inv_by_x_at_this();
+    J.template block<4, 3>(3, 4).setZero();
     return J;
   }
 
@@ -420,8 +434,8 @@ class Sim3 : public Sim3Base<Sim3<Scalar_, Options>> {
   /// Constructor from RxSO3 and translation vector
   ///
   template <class OtherDerived, class D>
-  SOPHUS_FUNC Sim3(RxSO3Base<OtherDerived> const& rxso3,
-                   Eigen::MatrixBase<D> const& translation)
+  SOPHUS_FUNC explicit Sim3(RxSO3Base<OtherDerived> const& rxso3,
+                            Eigen::MatrixBase<D> const& translation)
       : rxso3_(rxso3), translation_(translation) {
     static_assert(std::is_same<typename OtherDerived::Scalar, Scalar>::value,
                   "must be same Scalar type");
@@ -434,14 +448,24 @@ class Sim3 : public Sim3Base<Sim3<Scalar_, Options>> {
   /// Precondition: quaternion must not be close to zero.
   ///
   template <class D1, class D2>
-  SOPHUS_FUNC Sim3(Eigen::QuaternionBase<D1> const& quaternion,
-                   Eigen::MatrixBase<D2> const& translation)
+  SOPHUS_FUNC explicit Sim3(Eigen::QuaternionBase<D1> const& quaternion,
+                            Eigen::MatrixBase<D2> const& translation)
       : rxso3_(quaternion), translation_(translation) {
     static_assert(std::is_same<typename D1::Scalar, Scalar>::value,
                   "must be same Scalar type");
     static_assert(std::is_same<typename D2::Scalar, Scalar>::value,
                   "must be same Scalar type");
   }
+
+  /// Constructor from scale factor, unit quaternion, and translation vector.
+  ///
+  /// Precondition: quaternion must not be close to zero.
+  ///
+  template <class D1, class D2>
+  SOPHUS_FUNC explicit Sim3(Scalar const& scale,
+                            Eigen::QuaternionBase<D1> const& unit_quaternion,
+                            Eigen::MatrixBase<D2> const& translation)
+      : Sim3(RxSO3<Scalar>(scale, unit_quaternion), translation) {}
 
   /// Constructor from 4x4 matrix
   ///
@@ -551,6 +575,16 @@ class Sim3 : public Sim3Base<Sim3<Scalar_, Options>> {
     J.template block<3, 1>(4, 6) =
         (A_dsigma * Omega + B_dsigma * Omega2 + C_dsigma * I) * upsilon;
 
+    return J;
+  }
+
+  /// Returns derivative of exp(x) * p wrt. x_i at x=0.
+  ///
+  SOPHUS_FUNC static Sophus::Matrix<Scalar, 3, DoF> Dx_exp_x_times_point_at_0(
+      Point const& point) {
+    Sophus::Matrix<Scalar, 3, DoF> J;
+    J << Sophus::Matrix3<Scalar>::Identity(),
+        Sophus::RxSO3<Scalar>::Dx_exp_x_times_point_at_0(point);
     return J;
   }
 
@@ -732,9 +766,10 @@ class Sim3 : public Sim3Base<Sim3<Scalar_, Options>> {
 };
 
 template <class Scalar, int Options>
-Sim3<Scalar, Options>::Sim3() : translation_(TranslationMember::Zero()) {
+SOPHUS_FUNC Sim3<Scalar, Options>::Sim3()
+    : translation_(TranslationMember::Zero()) {
   static_assert(std::is_standard_layout<Sim3>::value,
-                "Assume standard layout for the use of offsetof check below.");
+                "Assume standard layout for the use of offset of check below.");
   static_assert(
       offsetof(Sim3, rxso3_) + sizeof(Scalar) * RxSO3<Scalar>::num_parameters ==
           offsetof(Sim3, translation_),
