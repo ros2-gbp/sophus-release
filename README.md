@@ -1,3 +1,26 @@
+## sophus (iron) - 1.22.9102-2
+
+The packages in the `sophus` repository were released into the `iron` distro by running `/usr/bin/bloom-release --track iron --rosdistro iron sophus` on `Thu, 06 Jun 2024 18:48:02 -0000`
+
+The `sophus` package was released.
+
+Version of package(s) in repository `sophus`:
+
+- upstream repository: https://github.com/clalancette/sophus.git
+- release repository: https://github.com/ros2-gbp/sophus-release.git
+- rosdistro version: `1.22.9102-1`
+- old version: `1.22.9102-1`
+- new version: `1.22.9102-2`
+
+Versions of tools used:
+
+- bloom version: `0.12.0`
+- catkin_pkg version: `1.0.0`
+- rosdep version: `0.24.0`
+- rosdistro version: `0.9.1`
+- vcstools version: `0.1.42`
+
+
 ## sophus (jazzy) - 1.22.9102-2
 
 The packages in the `sophus` repository were released into the `jazzy` distro by running `/usr/bin/bloom-release --track jazzy --rosdistro jazzy sophus` on `Thu, 06 Jun 2024 18:47:15 -0000`
