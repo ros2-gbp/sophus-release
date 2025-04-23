@@ -1,4 +1,4 @@
-From d7597327b04ba3c1268abaad3f8d66802fade66f Mon Sep 17 00:00:00 2001
+From 50f2556e150ba9f15809d2620689d93a30f606d0 Mon Sep 17 00:00:00 2001
 From: Chris Lalancette <clalancette@gmail.com>
 Date: Thu, 6 Jun 2024 13:54:12 -0400
 Subject: [PATCH] Don't build testing or examples on the buildfarm.
@@ -12,7 +12,7 @@ Signed-off-by: Chris Lalancette <clalancette@gmail.com>
  1 file changed, 2 insertions(+)
 
 diff --git a/rpm/template.spec.em b/rpm/template.spec.em
-index b1217d0..3984d34 100644
+index b1217d052964..3984d348c9a9 100644
 --- a/rpm/template.spec.em
 +++ b/rpm/template.spec.em
 @@ -51,6 +51,8 @@ mkdir -p .obj-%{_target_platform} && cd .obj-%{_target_platform}
@@ -25,5 +25,5 @@ index b1217d0..3984d34 100644
  
  %make_build
 -- 
-2.43.0
+2.49.0
 
