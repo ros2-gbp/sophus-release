@@ -394,4 +394,5 @@ tracks:
     ros_distro: rolling
     vcs_type: git
     vcs_uri: https://github.com/clalancette/sophus.git
-    version: :{auto}
+    version: 1.22.9102
+    version_saved: :{auto}
